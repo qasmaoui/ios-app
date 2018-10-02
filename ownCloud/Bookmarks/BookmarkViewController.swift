@@ -85,6 +85,7 @@ class BookmarkViewController: StaticTableViewController {
 				var changedBookmark = false
 
 				if let normalizedURL = NSURL(username: nil, password: nil, afterNormalizingURLString: textField.text, protocolWasPrepended: nil) {
+
 					if let host = normalizedURL.host {
 						placeholderString = host
 					}
@@ -185,9 +186,18 @@ class BookmarkViewController: StaticTableViewController {
 			case .create:
 				self.navigationItem.title = "Add bookmark".localized
 
-				// Support for bookmark default URL
-				if let defaultURLString = self.classSetting(forOCClassSettingsKey: .bookmarkDefaultURL) as? String {
+				if let defaultURLString = self.setting(as: String.self, for: .bookmarkDefaultURL) {
 					self.bookmark?.url = URL(string: defaultURLString)
+
+					if bookmark != nil {
+						updateUI(from: bookmark!) { (_) -> Bool in return(true) }
+					}
+				} else {
+					fatalError()
+				}
+
+				if let defaultName = self.setting(as: String.self, for: .bookmarkDefaultName) {
+					self.bookmark?.name = defaultName
 
 					if bookmark != nil {
 						updateUI(from: bookmark!) { (_) -> Bool in return(true) }
@@ -208,15 +218,12 @@ class BookmarkViewController: StaticTableViewController {
 		}
 
 		// Support for bookmark URL editable
-		if let bookmarkURLEditable = self.classSetting(forOCClassSettingsKey: .bookmarkURLEditable) as? Bool, bookmarkURLEditable == false {
-			self.urlRow?.enabled = bookmarkURLEditable
+		if let bookmarkURLEditable = self.setting(as: Bool.self, for: .bookmarkURLEditable), !bookmarkURLEditable {
+			self.urlRow?.makeNonEditable()
+		}
 
-			let vectorImageView = VectorImageView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
-
-			Theme.shared.add(tvgResourceFor: "icon-locked")
-			vectorImageView.vectorImage = Theme.shared.tvgImage(for: "icon-locked")
-
-			self.urlRow?.cell?.accessoryView = vectorImageView
+		if let nameEditable = self.setting(as: Bool.self, for: .bookmarkNameEditable), !nameEditable {
+			self.nameRow?.makeNonEditable()
 		}
 
 		// Update contents
@@ -259,6 +266,11 @@ class BookmarkViewController: StaticTableViewController {
 	}
 
 	func handleContinueURLProbe(hud: ProgressHUDViewController?, hudCompletion: @escaping (((() -> Void)?) -> Void)) {
+
+		if let url = self.setting(as: String.self, for: .bookmarkDefaultURL), let urlEditable = self.setting(as: Bool.self, for: .bookmarkURLEditable), !urlEditable {
+			urlRow?.value = url
+		}
+
 		if let urlString = urlRow?.value as? String {
 			var username : NSString?, password: NSString?
 			var protocolWasPrepended : ObjCBool = false
@@ -294,8 +306,6 @@ class BookmarkViewController: StaticTableViewController {
 				if let connection = OCConnection(bookmark: bookmark, persistentStoreBaseURL: nil) {
 					hud?.present(on: self, label: "Contacting server…".localized)
 
-					let previousCertificate = bookmark?.certificate
-
 					connection.prepareForSetup(options: nil) { (issue, _, _, preferredAuthenticationMethods) in
 						hudCompletion({
 							// Update URL
@@ -307,8 +317,7 @@ class BookmarkViewController: StaticTableViewController {
 									self?.updateInputFocus()
 								}
 
-								if self?.bookmark?.certificate == previousCertificate,
-								   let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
+								if let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
 								   self?.isAuthenticationMethodTokenBased(authMethodIdentifier as OCAuthenticationMethodIdentifier) == true {
 
 									self?.handleContinue()
@@ -338,17 +347,17 @@ class BookmarkViewController: StaticTableViewController {
 										self.present(issuesViewController, animated: true, completion: nil)
 									} else {
 										// Do not present issues
-										issue?.approve()
-										continueToNextStep()
+											issue?.approve()
+											continueToNextStep()
+										}
 									}
-								}
 							} else {
 								continueToNextStep()
 							}
 						})
 					}
 				}
-			}
+			} else { print("El perlindow")}
 		}
 	}
 
@@ -372,6 +381,17 @@ class BookmarkViewController: StaticTableViewController {
 					if error == nil {
 						self.bookmark?.authenticationMethodIdentifier = authMethodIdentifier
 						self.bookmark?.authenticationData = authMethodData
+
+						if let nameVisible = self.setting(as: Bool.self, for: .bookmarkNameVisible),
+							!nameVisible {
+							if let defaultName = self.setting(as: String.self, for: .bookmarkDefaultName) {
+								self.bookmark?.name = defaultName
+							} else {
+								self.bookmark?.name = self.bookmark?.shortName
+							}
+						} else {
+							self.bookmark?.name = self.bookmark?.shortName
+						}
 						self.userActionSave()
 					} else {
 						var issue : OCConnectionIssue?
@@ -453,13 +473,19 @@ class BookmarkViewController: StaticTableViewController {
 
 	func _composeSectionsAndRows(animated: Bool = true) {
 		// Name section: display if a bookmark's URL or name has been set
-		if (bookmark?.url != nil) || (bookmark?.name != nil) {
-			if nameSection?.attached == false {
-				self.insertSection(nameSection!, at: 0, animated: animated)
-			}
-		} else {
+		if let nameVisible = self.setting(as: Bool.self, for: .bookmarkNameVisible), nameVisible != true {
 			if nameSection?.attached == true {
 				self.removeSection(nameSection!, animated: animated)
+			}
+		} else {
+			if (bookmark?.url != nil) || (bookmark?.name != nil) {
+				if nameSection?.attached == false {
+					self.insertSection(nameSection!, at: 0, animated: animated)
+				}
+			} else {
+				if nameSection?.attached == true {
+					self.removeSection(nameSection!, animated: animated)
+				}
 			}
 		}
 
@@ -474,9 +500,14 @@ class BookmarkViewController: StaticTableViewController {
 			}
 		}
 
-		// URL section: show always
-		if urlSection?.attached == false {
-			self.insertSection(urlSection!, at: self.sections.contains(nameSection!) ? 1 : 0, animated: animated)
+		if let urlVisible = self.setting(as: Bool.self, for: .bookmarkURLVisible), urlVisible != true {
+			if urlSection?.attached == true {
+				self.removeSection(urlSection!, animated: animated)
+			}
+		} else {
+			if urlSection?.attached == false {
+				self.insertSection(urlSection!, at: self.sections.contains(nameSection!) ? 1 : 0, animated: animated)
+			}
 		}
 
 		// Credentials section: show depending on authentication method and data
@@ -564,6 +595,8 @@ class BookmarkViewController: StaticTableViewController {
 			if credentialsSection?.attached == false {
 				if let urlSectionIndex = urlSection?.index {
 					self.insertSection(credentialsSection!, at: urlSectionIndex+1, animated: animated)
+				} else {
+					self.insertSection(credentialsSection!, at: sections.count-1, animated: animated)
 				}
 			}
 		} else {
@@ -626,33 +659,46 @@ class BookmarkViewController: StaticTableViewController {
 	}
 
 	func updateUI(from bookmark: OCBookmark, fieldSelector: ((_ row: StaticTableViewRow) -> Bool)) {
-		// Name
-		if nameRow != nil, fieldSelector(nameRow!) {
-			// - Value
-			if bookmark.name != nil {
-				nameRow!.value = bookmark.name
-			} else {
-				nameRow!.value = ""
+
+		if let nameVisible = self.setting(as: Bool.self, for: .bookmarkNameVisible), nameVisible == true {
+			// Name
+			if nameRow != nil, fieldSelector(nameRow!) {
+				// - Value
+				if bookmark.name != nil {
+					nameRow!.value = bookmark.name
+				} else {
+					nameRow!.value = ""
+				}
+
+				// - Placeholder
+				var placeholderString = "Name".localized
+
+				if (bookmark.url != nil) || (bookmark.originURL != nil) {
+					if let bookmarkURLVisible = self.setting(as: Bool.self, for: .bookmarkURLVisible), !bookmarkURLVisible {
+						if let bookmarkNameDefault = self.setting(as: String.self, for: .bookmarkDefaultName) {
+							placeholderString = bookmarkNameDefault
+						} else {
+							placeholderString = "Name".localized
+						}
+					} else {
+						placeholderString = bookmark.shortName
+					}
+				}
+
+				self.nameRow?.textField?.attributedPlaceholder = NSAttributedString(string: placeholderString, attributes: [.foregroundColor : Theme.shared.activeCollection.tableRowColors.secondaryLabelColor])
 			}
-
-			// - Placeholder
-			var placeholderString = "Name".localized
-
-			if (bookmark.url != nil) || (bookmark.originURL != nil) {
-				placeholderString = bookmark.shortName
-			}
-
-			self.nameRow?.textField?.attributedPlaceholder = NSAttributedString(string: placeholderString, attributes: [.foregroundColor : Theme.shared.activeCollection.tableRowColors.secondaryLabelColor])
 		}
 
-		// URL
-		if urlRow != nil, fieldSelector(urlRow!) {
-			if bookmark.originURL != nil {
-				urlRow?.value = bookmark.originURL.absoluteString
-			} else if bookmark.url != nil {
-				urlRow?.value = bookmark.url.absoluteString
-			} else {
-				urlRow?.value = ""
+		if let urlVisible = self.setting(as: Bool.self, for: .bookmarkURLVisible), urlVisible == true {
+			// URL
+			if urlRow != nil, fieldSelector(urlRow!) {
+				if bookmark.originURL != nil {
+					urlRow?.value = bookmark.originURL.absoluteString
+				} else if bookmark.url != nil {
+					urlRow?.value = bookmark.url.absoluteString
+				} else {
+					urlRow?.value = ""
+				}
 			}
 		}
 
@@ -705,8 +751,12 @@ extension OCClassSettingsIdentifier {
 }
 
 extension OCClassSettingsKey {
-	static let bookmarkDefaultURL = OCClassSettingsKey("default-url")
-	static let bookmarkURLEditable = OCClassSettingsKey("url-editable")
+	static let bookmarkDefaultURL = OCClassSettingsKey("DefaultURL")
+	static let bookmarkURLEditable = OCClassSettingsKey("URLEditable")
+	static let bookmarkURLVisible = OCClassSettingsKey("URLVisible")
+	static let bookmarkNameEditable = OCClassSettingsKey("NameEditable")
+	static let bookmarkNameVisible = OCClassSettingsKey("NameVisible")
+	static let bookmarkDefaultName = OCClassSettingsKey("DefaultName")
 }
 
 extension BookmarkViewController : OCClassSettingsSupport {
@@ -716,12 +766,16 @@ extension BookmarkViewController : OCClassSettingsSupport {
 
 	static func defaultSettings(forIdentifier identifier: OCClassSettingsIdentifier!) -> [OCClassSettingsKey : Any]! {
 		return [ : ]
-		/*
-		return [
-			.bookmarkDefaultURL : "http://demo.owncloud.org/",
-			.bookmarkURLEditable : false
-		]
-		*/
+
+//		return [
+//			.bookmarkDefaultURL : "https://demo.owncloud.org",
+//			.bookmarkURLEditable : true,
+//			.bookmarkURLVisible : true,
+//			.bookmarkNameEditable : false,
+//			.bookmarkNameVisible : true,
+//			.bookmarkDefaultName : "El perluki"
+//		]
+
 	}
 }
 

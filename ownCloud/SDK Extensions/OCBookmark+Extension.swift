@@ -23,6 +23,8 @@ extension OCBookmark {
 	var shortName: String {
 		if self.name != nil {
 			return self.name
+		} else if self.userName != nil {
+			return self.userName!
 		} else if self.originURL?.host != nil {
 			return self.originURL.host!
 		} else if self.url?.host != nil {
@@ -30,5 +32,16 @@ extension OCBookmark {
 		}
 
 		return "bookmark"
+	}
+
+	var userName : String? {
+		if self.authenticationData != nil,
+			self.authenticationMethodIdentifier != nil,
+			let authenticationMethod = OCAuthenticationMethod.registeredAuthenticationMethod(forIdentifier: self.authenticationMethodIdentifier),
+			authenticationMethod.usesUserName {
+			return authenticationMethod.userName(fromAuthenticationData: self.authenticationData)
+		}
+
+		return nil
 	}
 }

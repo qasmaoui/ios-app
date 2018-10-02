@@ -355,3 +355,21 @@ class StaticTableViewRow : NSObject, UITextFieldDelegate {
 		}
 	}
 }
+
+extension StaticTableViewRow {
+	func makeNonEditable() {
+		self.enabled = false
+
+		let vectorImageView = VectorImageView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+
+		Theme.shared.add(tvgResourceFor: "icon-locked")
+		vectorImageView.vectorImage = Theme.shared.tvgImage(for: "icon-locked")
+
+		self.cell?.accessoryView = vectorImageView
+	}
+
+	func makeEditable() {
+		self.enabled = true
+		self.cell?.accessoryView = nil
+	}
+}

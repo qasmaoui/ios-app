@@ -192,8 +192,6 @@ class BookmarkViewController: StaticTableViewController {
 					if bookmark != nil {
 						updateUI(from: bookmark!) { (_) -> Bool in return(true) }
 					}
-				} else {
-					fatalError()
 				}
 
 				if let defaultName = self.setting(as: String.self, for: .bookmarkDefaultName) {
@@ -306,6 +304,8 @@ class BookmarkViewController: StaticTableViewController {
 				if let connection = OCConnection(bookmark: bookmark, persistentStoreBaseURL: nil) {
 					hud?.present(on: self, label: "Contacting server…".localized)
 
+					let previousCertificate = bookmark?.certificate
+
 					connection.prepareForSetup(options: nil) { (issue, _, _, preferredAuthenticationMethods) in
 						hudCompletion({
 							// Update URL
@@ -317,7 +317,7 @@ class BookmarkViewController: StaticTableViewController {
 									self?.updateInputFocus()
 								}
 
-								if let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
+								if self?.bookmark?.certificate == previousCertificate, let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
 								   self?.isAuthenticationMethodTokenBased(authMethodIdentifier as OCAuthenticationMethodIdentifier) == true {
 
 									self?.handleContinue()
@@ -331,33 +331,33 @@ class BookmarkViewController: StaticTableViewController {
 										// Present issues if the level is >= warning
 										let issuesViewController = ConnectionIssueViewController(displayIssues: displayIssues, completion: { [weak self] (response) in
 											switch response {
-												case .cancel:
-													issue?.reject()
-													self?.bookmark?.url = nil
+											case .cancel:
+												issue?.reject()
+												self?.bookmark?.url = nil
 
-												case .approve:
-													issue?.approve()
-													continueToNextStep()
+											case .approve:
+												issue?.approve()
+												continueToNextStep()
 
-												case .dismiss:
-													self?.bookmark?.url = nil
+											case .dismiss:
+												self?.bookmark?.url = nil
 											}
 										})
 
 										self.present(issuesViewController, animated: true, completion: nil)
 									} else {
 										// Do not present issues
-											issue?.approve()
-											continueToNextStep()
-										}
+										issue?.approve()
+										continueToNextStep()
 									}
+								}
 							} else {
 								continueToNextStep()
 							}
 						})
 					}
 				}
-			} else { print("El perlindow")}
+			}
 		}
 	}
 

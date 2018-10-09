@@ -467,7 +467,6 @@
 		233BDE93204FEFE500C06732 = {
 			isa = PBXGroup;
 			children = (
-				6E3CD4912164D2DB00D6DEF2 /* ManagedAppConfig.plist */,
 				DC9BFBB220A19AF3007064B5 /* doc */,
 				DCD344AF205BD0FA00189B9A /* openssl.xcodeproj */,
 				233BDEBF204FEFF300C06732 /* ownCloudSDK.xcodeproj */,
@@ -1106,7 +1105,6 @@
 				DCE5E8A82080D781005F60CE /* folder-public.tvg in Resources */,
 				DCE5E8B12080D781005F60CE /* package-x-generic.tvg in Resources */,
 				DCE5E8AD2080D781005F60CE /* folder-starred.tvg in Resources */,
-				6E3CD4922164D2DB00D6DEF2 /* ManagedAppConfig.plist in Resources */,
 				DCE5E8A22080D781005F60CE /* folder-external.tvg in Resources */,
 				DC85572D20513B8C00189B9A /* ServerListTableViewController.xib in Resources */,
 				DCE5E8B42080D781005F60CE /* folder-shared.tvg in Resources */,

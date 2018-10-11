@@ -236,6 +236,11 @@ class BookmarkViewController: StaticTableViewController {
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
 		self.updateInputFocus()
+		if let urlVisible = self.setting(as: Bool.self, for: .bookmarkURLVisible), !urlVisible {
+			if let nameEditable = self.setting(as: Bool.self, for: .bookmarkNameEditable), !nameEditable {
+				handleContinue()
+			}
+		}
 	}
 
 	// MARK: - Continue
@@ -317,7 +322,7 @@ class BookmarkViewController: StaticTableViewController {
 									self?.updateInputFocus()
 								}
 
-								if self?.bookmark?.certificate == previousCertificate, let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
+								if let authMethodIdentifier = self?.bookmark?.authenticationMethodIdentifier,
 								   self?.isAuthenticationMethodTokenBased(authMethodIdentifier as OCAuthenticationMethodIdentifier) == true {
 
 									self?.handleContinue()
@@ -473,7 +478,7 @@ class BookmarkViewController: StaticTableViewController {
 
 	func _composeSectionsAndRows(animated: Bool = true) {
 		// Name section: display if a bookmark's URL or name has been set
-		if let nameVisible = self.setting(as: Bool.self, for: .bookmarkNameVisible), nameVisible != true {
+		if let nameVisible = self.setting(as: Bool.self, for: .bookmarkNameVisible), !nameVisible {
 			if nameSection?.attached == true {
 				self.removeSection(nameSection!, animated: animated)
 			}
@@ -765,16 +770,16 @@ extension BookmarkViewController : OCClassSettingsSupport {
 	}
 
 	static func defaultSettings(forIdentifier identifier: OCClassSettingsIdentifier!) -> [OCClassSettingsKey : Any]! {
-		return [ : ]
+//		return [ : ]
 
-//		return [
-//			.bookmarkDefaultURL : "https://demo.owncloud.org",
-//			.bookmarkURLEditable : true,
-//			.bookmarkURLVisible : true,
-//			.bookmarkNameEditable : false,
-//			.bookmarkNameVisible : true,
-//			.bookmarkDefaultName : "El perluki"
-//		]
+		return [
+			.bookmarkDefaultURL : "https://cloud.owncloud.com",
+			.bookmarkURLEditable : false,
+			.bookmarkURLVisible : false,
+			.bookmarkNameEditable : true,
+			.bookmarkNameVisible : true,
+			.bookmarkDefaultName : "El perluki"
+		]
 
 	}
 }

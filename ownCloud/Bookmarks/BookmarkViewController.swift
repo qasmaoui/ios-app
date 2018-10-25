@@ -756,12 +756,12 @@ extension OCClassSettingsIdentifier {
 }
 
 extension OCClassSettingsKey {
-	static let bookmarkDefaultURL = OCClassSettingsKey("DefaultURL")
-	static let bookmarkURLEditable = OCClassSettingsKey("URLEditable")
-	static let bookmarkURLVisible = OCClassSettingsKey("URLVisible")
-	static let bookmarkNameEditable = OCClassSettingsKey("NameEditable")
-	static let bookmarkNameVisible = OCClassSettingsKey("NameVisible")
-	static let bookmarkDefaultName = OCClassSettingsKey("DefaultName")
+	static let bookmarkDefaultURL = OCClassSettingsKey("default-url")
+	static let bookmarkURLEditable = OCClassSettingsKey("url-editable")
+	static let bookmarkURLVisible = OCClassSettingsKey("url-visible")
+	static let bookmarkNameEditable = OCClassSettingsKey("name-editable")
+	static let bookmarkNameVisible = OCClassSettingsKey("name-visible")
+	static let bookmarkDefaultName = OCClassSettingsKey("default-name")
 }
 
 extension BookmarkViewController : OCClassSettingsSupport {
@@ -773,12 +773,12 @@ extension BookmarkViewController : OCClassSettingsSupport {
 //		return [ : ]
 
 		return [
-			.bookmarkDefaultURL : "https://cloud.owncloud.com",
-			.bookmarkURLEditable : false,
-			.bookmarkURLVisible : false,
+			.bookmarkDefaultURL : "https://demo.owncloud.org",
+			.bookmarkURLEditable : true,
+			.bookmarkURLVisible : true,
 			.bookmarkNameEditable : true,
 			.bookmarkNameVisible : true,
-			.bookmarkDefaultName : "El perluki"
+			.bookmarkDefaultName : "defaultName"
 		]
 
 	}

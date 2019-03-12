@@ -157,8 +157,6 @@ class PasscodeViewController: UIViewController, Themeable {
 		self.keypadButtonsEnabled = { self.keypadButtonsEnabled }()
 		self.keypadButtonsHidden = { self.keypadButtonsHidden }()
 		self.screenBlurringEnabled = { self.screenBlurringEnabled }()
-		self.errorMessageLabel?.minimumScaleFactor = 0.5
-		self.errorMessageLabel?.adjustsFontSizeToFitWidth = true
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -269,6 +267,7 @@ class PasscodeViewController: UIViewController, Themeable {
 		deleteButton?.themeColorCollection = ThemeColorPairCollection(fromPair: ThemeColorPair(foreground: collection.tintColor, background: collection.tableBackgroundColor))
 
 		cancelButton?.applyThemeCollection(collection, itemStyle: .defaultForItem)
+		cancelButton?.layer.cornerRadius = 0
 	}
 
     // MARK: - External Keyboard Commands

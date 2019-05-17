@@ -24,12 +24,12 @@ extension OCCore {
 	func unifiedShares(for item: OCItem, completionHandler: @escaping (_ shares: [OCShare]) -> Void) {
 		let shareQuery = OCShareQuery(scope: .itemWithReshares, item: item)
 		start(shareQuery!)
-		shareQuery?.initialPopulationHandler = { query in
+		shareQuery?.initialPopulationHandler = { [weak self] query in
 			let sharesWithReshares = query.queryResults
-			self.stop(shareQuery!)
+			self?.stop(shareQuery!)
 
 			let shareQuery = OCShareQuery(scope: .sharedWithUser, item: item)
-			self.start(shareQuery!)
+			self?.start(shareQuery!)
 			shareQuery?.initialPopulationHandler = { query in
 				let sharesWithMe = query.queryResults.filter({ (share) -> Bool in
 					if share.itemPath == item.path {
@@ -41,17 +41,17 @@ extension OCCore {
 				var shares : [OCShare] = []
 				shares.append(contentsOf: sharesWithMe)
 				shares.append(contentsOf: sharesWithReshares)
-				self.stop(shareQuery!)
+				self?.stop(shareQuery!)
 
 				completionHandler(shares)
 			}
 		}
 	}
 
-	func sharesSharedWithMe(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void) -> OCShareQuery? {
+	func sharesSharedWithMe(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool = false) -> OCShareQuery? {
 		let shareQuery = OCShareQuery(scope: .sharedWithUser, item: item)
 		start(shareQuery!)
-		shareQuery?.initialPopulationHandler = { query in
+		shareQuery?.initialPopulationHandler = { [weak self] query in
 			let shares = query.queryResults.filter({ (share) -> Bool in
 				if share.itemPath == item.path {
 					return true
@@ -59,18 +59,26 @@ extension OCCore {
 				return false
 			})
 			initialPopulationHandler(shares)
+
+			if !keepRunning {
+				self?.stop(query)
+			}
 		}
 
-		return shareQuery
+		return keepRunning ? shareQuery : nil
 	}
 
-	func sharesWithReshares(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void) -> OCShareQuery? {
+	func sharesWithReshares(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool = false) -> OCShareQuery? {
 		let shareQuery = OCShareQuery(scope: .itemWithReshares, item: item)
 		start(shareQuery!)
-		shareQuery?.initialPopulationHandler = { query in
+		shareQuery?.initialPopulationHandler = { [weak self] query in
 			initialPopulationHandler(query.queryResults)
+
+			if !keepRunning {
+				self?.stop(query)
+			}
 		}
 
-		return shareQuery
+		return keepRunning ? shareQuery : nil
 	}
 }

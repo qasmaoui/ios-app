@@ -335,15 +335,32 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 	func updateSearchResults(for searchController: UISearchController) {
 		guard let text = searchController.searchBar.text else { return }
 		if text.count > core?.connection.capabilities?.sharingSearchMinLength?.intValue ?? 1 {
+			if let recipients = recipientSearchController?.recipients, recipients.count > 0,
+			   recipientSearchController?.searchTerm == text,
+			   self.sectionForIdentifier("search-results") == nil {
+				self.searchControllerHasNewResults(recipientSearchController!, error: nil)
+			}
+
 			recipientSearchController?.searchTerm = text
 		} else if searchController.isActive {
-			resetTable(showShares: false)
+			if text.count == 0 {
+				recipientSearchController?.searchTerm = nil
+			} else {
+				resetTable(showShares: false)
+			}
 		}
 	}
 
 	func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
 		self.resetTable(showShares: true)
 		self.searchController?.searchBar.isLoading = false
+	}
+
+	func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+		if recipientSearchController?.recipients == nil, recipientSearchController?.searchTerm == nil {
+			recipientSearchController?.search()
+		}
+		return true
 	}
 
 	func searchControllerHasNewResults(_ searchController: OCRecipientSearchController, error: Error?) {

@@ -65,7 +65,7 @@ class PublicLinkTableViewController: StaticTableViewController {
 					self.addShareSections()
 				}
 			}
-		})
+		}, keepRunning: true)
 
 		shareQuery?.refreshInterval = 2
 		shareQuery?.changesAvailableNotificationHandler = { query in

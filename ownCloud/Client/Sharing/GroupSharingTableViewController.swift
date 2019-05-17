@@ -103,7 +103,8 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 					self.addShareSections()
 				}
 			}
-			_ = self.core?.sharesSharedWithMe(for: self.item, initialPopulationHandler: { (sharesWithMe) in
+
+			self.core?.sharesSharedWithMe(for: self.item, initialPopulationHandler: { (sharesWithMe) in
 				OnMainThread {
 					if sharesWithMe.count > 0 {
 						var shares : [OCShare] = []
@@ -117,7 +118,7 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 					self.addActionShareSection()
 				}
 			})
-		})
+		}, keepRunning: true)
 
 		shareQuery?.refreshInterval = 2
 		shareQuery?.changesAvailableNotificationHandler = { query in

@@ -48,7 +48,7 @@ extension OCCore {
 		}
 	}
 
-	func sharesSharedWithMe(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool = false) -> OCShareQuery? {
+	@discardableResult func sharesSharedWithMe(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool = false) -> OCShareQuery? {
 		let shareQuery = OCShareQuery(scope: .sharedWithUser, item: item)
 		start(shareQuery!)
 		shareQuery?.initialPopulationHandler = { [weak self] query in
@@ -68,7 +68,7 @@ extension OCCore {
 		return keepRunning ? shareQuery : nil
 	}
 
-	func sharesWithReshares(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool = false) -> OCShareQuery? {
+	@discardableResult func sharesWithReshares(for item: OCItem, initialPopulationHandler: @escaping (_ shares: [OCShare]) -> Void, keepRunning: Bool) -> OCShareQuery? {
 		let shareQuery = OCShareQuery(scope: .itemWithReshares, item: item)
 		start(shareQuery!)
 		shareQuery?.initialPopulationHandler = { [weak self] query in

@@ -340,8 +340,8 @@ extension Action {
 
 			if item.isSharedWithUser == false {
 				// find Shares by me
-				let privateShares = shares.filter { (OCShare) -> Bool in
-					if OCShare.type != .link {
+				let privateShares = shares.filter { (share) -> Bool in
+					if share.type != .link {
 						return true
 					}
 					return false
@@ -367,8 +367,8 @@ extension Action {
 			}
 
 			// find Public link shares
-			let linkShares = shares.filter { (OCShare) -> Bool in
-				if OCShare.type == .link {
+			let linkShares = shares.filter { (share) -> Bool in
+				if share.type == .link {
 					return true
 				}
 				return false

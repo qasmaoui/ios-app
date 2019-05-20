@@ -97,49 +97,51 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 
 		addHeaderView()
 
-		shareQuery = core?.sharesWithReshares(for: item, initialPopulationHandler: { (sharesWithReshares) in
+		shareQuery = core?.sharesWithReshares(for: item, initialPopulationHandler: { [weak self] (sharesWithReshares) in
+			guard let item = self?.item else { return }
+
 			if sharesWithReshares.count > 0 {
-				self.shares = sharesWithReshares.filter { (share) -> Bool in
+				self?.shares = sharesWithReshares.filter { (share) -> Bool in
 					if share.type != .link {
 						return true
 					}
 					return false
 				}
 				OnMainThread {
-					self.addShareSections()
+					self?.addShareSections()
 				}
 			}
 
-			self.core?.sharesSharedWithMe(for: self.item, initialPopulationHandler: { (sharesWithMe) in
+			self?.core?.sharesSharedWithMe(for: item, initialPopulationHandler: { [weak self] (sharesWithMe) in
 				OnMainThread {
 					if sharesWithMe.count > 0 {
 						var shares : [OCShare] = []
 						shares.append(contentsOf: sharesWithMe)
 						shares.append(contentsOf: sharesWithReshares)
-						self.shares = shares
-						self.removeShareSections()
-						self.addShareSections()
+						self?.shares = shares
+						self?.removeShareSections()
+						self?.addShareSections()
 					}
 
-					self.addActionShareSection()
+					self?.addActionShareSection()
 				}
 			})
 		}, keepRunning: true)
 
 		shareQuery?.refreshInterval = 2
-		shareQuery?.changesAvailableNotificationHandler = { query in
-			let sharesWithReshares = query.queryResults.filter { (OCShare) -> Bool in
-				if OCShare.type != .link {
+		shareQuery?.changesAvailableNotificationHandler = { [weak self] query in
+			let sharesWithReshares = query.queryResults.filter { (share) -> Bool in
+				if share.type != .link {
 					return true
 				}
 				return false
 			}
-			self.shares = sharesWithReshares
+			self?.shares = sharesWithReshares
 			OnMainThread {
-				self.removeShareSections()
-				self.addShareSections()
+				self?.removeShareSections()
+				self?.addShareSections()
 
-				self.addActionShareSection()
+				self?.addActionShareSection()
 			}
 		}
 	}
@@ -219,8 +221,8 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 	func addSectionFor(type: OCShareType, with title: String) {
 		var shareRows: [StaticTableViewRow] = []
 
-		let user = shares.filter { (OCShare) -> Bool in
-			if OCShare.type == type {
+		let user = shares.filter { (share) -> Bool in
+			if share.type == type {
 				return true
 			}
 			return false
@@ -228,8 +230,8 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 
 		if user.count > 0 {
 			for share in user {
-				let resharedUsers = shares.filter { (OCShare) -> Bool in
-					if OCShare.owner == share.recipient?.user {
+				let resharedUsers = shares.filter { (otherShare) -> Bool in
+					if otherShare.owner == share.recipient?.user {
 						return true
 					}
 					return false
@@ -308,8 +310,8 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 		}
 
 		if type != nil {
-			let shares = self.shares.filter { (OCShare) -> Bool in
-				if OCShare.type == type {
+			let shares = self.shares.filter { (share) -> Bool in
+				if share.type == type {
 					return true
 				}
 				return false

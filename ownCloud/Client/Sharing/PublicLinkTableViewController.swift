@@ -61,8 +61,8 @@ class PublicLinkTableViewController: StaticTableViewController {
 
 		shareQuery = core?.sharesWithReshares(for: item, initialPopulationHandler: { (sharesWithReshares) in
 			if sharesWithReshares.count > 0 {
-				self.shares = sharesWithReshares.filter { (OCShare) -> Bool in
-					if OCShare.type == .link {
+				self.shares = sharesWithReshares.filter { (share) -> Bool in
+					if share.type == .link {
 						return true
 					}
 					return false
@@ -75,8 +75,8 @@ class PublicLinkTableViewController: StaticTableViewController {
 
 		shareQuery?.refreshInterval = 2
 		shareQuery?.changesAvailableNotificationHandler = { query in
-			let sharesWithReshares = query.queryResults.filter { (OCShare) -> Bool in
-				if OCShare.type == .link {
+			let sharesWithReshares = query.queryResults.filter { (share) -> Bool in
+				if share.type == .link {
 					return true
 				}
 				return false
@@ -121,8 +121,8 @@ class PublicLinkTableViewController: StaticTableViewController {
 	func addSectionFor(type: OCShareType, with title: String) {
 		var shareRows: [StaticTableViewRow] = []
 
-		let user = shares.filter { (OCShare) -> Bool in
-			if OCShare.type == type {
+		let user = shares.filter { (share) -> Bool in
+			if share.type == type {
 				return true
 			}
 			return false

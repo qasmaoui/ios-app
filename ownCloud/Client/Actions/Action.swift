@@ -329,7 +329,7 @@ class Action : NSObject {
 
 extension Action {
 
-	class func shareRows(shares: [OCShare], item: OCItem, presentingController: UIViewController, context: ActionContext) -> [StaticTableViewRow] {
+	private class func shareRows(shares: [OCShare], item: OCItem, presentingController: UIViewController, context: ActionContext) -> [StaticTableViewRow] {
 		var shareRows: [StaticTableViewRow] = []
 
 		if shares.count > 0 {
@@ -384,13 +384,11 @@ extension Action {
 
 			if hasUserGroupSharing {
 				let addGroupRow = StaticTableViewRow(rowWithAction: { (_, _) in
-					presentingController.dismiss(animated: true)
-
-					if let viewController = context.viewController, let core = context.core {
+					if let core = context.core {
 						let sharingViewController = GroupSharingTableViewController(core: core, item: item)
 						sharingViewController.shares = shares
-						let navigationController = ThemeNavigationController(rootViewController: sharingViewController)
-						viewController.present(navigationController, animated: true, completion: nil)
+
+						self.dismiss(presentingController: presentingController, andPresent: sharingViewController, on: context.viewController)
 					}
 				}, title: userTitle, subtitle: nil, image: UIImage(named: "group"), alignment: .left, accessoryType: .disclosureIndicator)
 				shareRows.append(addGroupRow)
@@ -400,13 +398,11 @@ extension Action {
 
 			if hasLinkSharing {
 				let addGroupRow = StaticTableViewRow(rowWithAction: { (_, _) in
-					presentingController.dismiss(animated: true)
-
-					if let viewController = context.viewController, let core = context.core {
+					if let core = context.core {
 						let sharingViewController = PublicLinkTableViewController(core: core, item: item)
 						sharingViewController.shares = shares
-						let navigationController = ThemeNavigationController(rootViewController: sharingViewController)
-						viewController.present(navigationController, animated: true, completion: nil)
+
+						self.dismiss(presentingController: presentingController, andPresent: sharingViewController, on: context.viewController)
 					}
 				}, title: linkTitle, subtitle: nil, image: UIImage(named: "link"), alignment: .left, accessoryType: .disclosureIndicator)
 				shareRows.append(addGroupRow)
@@ -423,7 +419,7 @@ extension Action {
 		return shareRows
 	}
 
-	class func updateSharingSection(sectionIdentifier: String, rows: [StaticTableViewRow], tableViewController: MoreStaticTableViewController) {
+	private class func updateSharingSection(sectionIdentifier: String, rows: [StaticTableViewRow], tableViewController: MoreStaticTableViewController) {
 		if let section = tableViewController.sectionForIdentifier(sectionIdentifier) {
 			tableViewController.removeSection(section)
 		}
@@ -432,36 +428,30 @@ extension Action {
 		}
 	}
 
-	class func shareAsGroupRow(item : OCItem, presentingController: UIViewController, context: ActionContext) -> StaticTableViewRow {
+	private class func shareAsGroupRow(item : OCItem, presentingController: UIViewController, context: ActionContext) -> StaticTableViewRow {
 		var title = "Share this file".localized
 		if item.type == .collection {
 			title = "Share this folder".localized
 		}
 
 		let addGroupRow = StaticTableViewRow(buttonWithAction: { (_, _) in
-			presentingController.dismiss(animated: true)
-
-			if let viewController = context.viewController, let core = context.core {
-				let sharingViewController = GroupSharingTableViewController(core: core, item: item)
-				let navigationController = ThemeNavigationController(rootViewController: sharingViewController)
-
-				viewController.present(navigationController, animated: true, completion: nil)
+			if let core = context.core {
+				self.dismiss(presentingController: presentingController,
+					     andPresent: GroupSharingTableViewController(core: core, item: item),
+					     on: context.viewController)
 			}
 		}, title: title, style: .plain, image: UIImage(named: "group"), alignment: .left, identifier: "share-add-group")
 
 		return addGroupRow
 	}
 
-	class func shareAsPublicLinkRow(item : OCItem, presentingController: UIViewController, context: ActionContext) -> StaticTableViewRow? {
+	private class func shareAsPublicLinkRow(item : OCItem, presentingController: UIViewController, context: ActionContext) -> StaticTableViewRow? {
 		if let core = context.core, core.connection.capabilities?.publicSharingEnabled == true, !item.sharedByPublicLink, item.isShareable {
 			let addGroupRow = StaticTableViewRow(buttonWithAction: { (_, _) in
-				presentingController.dismiss(animated: true)
-
-				if let viewController = context.viewController {
-					let sharingViewController = PublicLinkTableViewController(core: core, item: item)
-					let navigationController = ThemeNavigationController(rootViewController: sharingViewController)
-
-					viewController.present(navigationController, animated: true, completion: nil)
+				if let core = context.core {
+					self.dismiss(presentingController: presentingController,
+						     andPresent: PublicLinkTableViewController(core: core, item: item),
+						     on: context.viewController)
 				}
 			}, title: "Create Public Link".localized, style: .plain, image: UIImage(named: "link"), alignment: .left, identifier: "share-add-group")
 
@@ -469,5 +459,15 @@ extension Action {
 		}
 
 		return nil
+	}
+
+	private class func dismiss(presentingController: UIViewController, andPresent viewController: UIViewController, on hostViewController: UIViewController?) {
+		presentingController.dismiss(animated: true)
+
+		guard let hostViewController = hostViewController else { return }
+
+		let navigationController = ThemeNavigationController(rootViewController: viewController)
+
+		hostViewController.present(navigationController, animated: true, completion: nil)
 	}
 }

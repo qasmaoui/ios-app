@@ -41,13 +41,19 @@ class PublicLinkTableViewController: StaticTableViewController {
 		fatalError("init(coder:) has not been implemented")
 	}
 
+	deinit {
+		if let query = self.shareQuery {
+			self.core?.stop(query)
+		}
+	}
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
 		messageView = MessageView(add: self.view)
 
 		self.navigationItem.title = "Public Links".localized
-		self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissView))
+		self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissAnimated))
 		self.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addPublicLink))
 
 		addHeaderView()
@@ -82,13 +88,6 @@ class PublicLinkTableViewController: StaticTableViewController {
 				self.handleEmptyShares()
 			}
 		}
-	}
-
-	@objc func dismissView() {
-		if let query = self.shareQuery {
-			self.core?.stop(query)
-		}
-		dismissAnimated()
 	}
 
 	override func viewDidAppear(_ animated: Bool) {

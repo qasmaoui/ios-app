@@ -66,6 +66,12 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 		fatalError("init(coder:) has not been implemented")
 	}
 
+	deinit {
+		if let query = self.shareQuery {
+			self.core?.stop(query)
+		}
+	}
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -87,7 +93,7 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 		messageView = MessageView(add: self.view)
 
 		self.navigationItem.title = "Sharing".localized
-		self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissView))
+		self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissAnimated))
 
 		addHeaderView()
 
@@ -136,13 +142,6 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 				self.addActionShareSection()
 			}
 		}
-	}
-
-	@objc func dismissView() {
-		if let query = self.shareQuery {
-			self.core?.stop(query)
-		}
-		dismissAnimated()
 	}
 
 	// MARK: - Header View
@@ -197,7 +196,7 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 						self.core?.makeDecision(on: share, accept: false, completionHandler: { (error) in
 							OnMainThread {
 								if error == nil {
-									self.dismissView()
+									self.dismissAnimated()
 								} else {
 									if let shareError = error {
 										let alertController = UIAlertController(with: "Decline Share failed".localized, message: shareError.localizedDescription, okLabel: "OK".localized, action: nil)

@@ -101,7 +101,6 @@ class MoreViewHeader: UIView {
 			iconView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20).with(priority: .defaultHigh),
 
 			labelContainerView.leftAnchor.constraint(equalTo: iconView.rightAnchor, constant: 15),
-			labelContainerView.rightAnchor.constraint(equalTo: self.safeAreaLayoutGuide.rightAnchor, constant: -20),
 			labelContainerView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
 			labelContainerView.topAnchor.constraint(greaterThanOrEqualTo: self.safeAreaLayoutGuide.topAnchor, constant: 20),
 			labelContainerView.bottomAnchor.constraint(lessThanOrEqualTo: self.safeAreaLayoutGuide.bottomAnchor, constant: -20)
@@ -117,7 +116,13 @@ class MoreViewHeader: UIView {
 				favoriteButton.heightAnchor.constraint(equalToConstant: favoriteSize.height),
 
 				favoriteButton.rightAnchor.constraint(equalTo: self.safeAreaLayoutGuide.rightAnchor, constant: -15),
-				favoriteButton.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+				favoriteButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+
+				favoriteButton.leftAnchor.constraint(equalTo: labelContainerView.rightAnchor, constant: 10)
+			])
+		} else {
+			NSLayoutConstraint.activate([
+				labelContainerView.rightAnchor.constraint(equalTo: self.safeAreaLayoutGuide.rightAnchor, constant: -20)
 			])
 		}
 

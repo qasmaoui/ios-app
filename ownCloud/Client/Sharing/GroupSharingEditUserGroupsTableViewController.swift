@@ -103,33 +103,23 @@ class GroupSharingEditUserGroupsTableViewController: StaticTableViewController {
 		self.insertSection(section, at: 0, animated: false)
 	}
 
+	private func addPermissionRow(to section: StaticTableViewSection, with title: String, permission: OCSharePermissionsMask, selected: Bool, identifier: String) {
+		section.add(row: StaticTableViewRow(toggleItemWithAction: { (row, _) in
+			if let selected = row.value as? Bool {
+				self.changePermissions(enabled: selected, permissions: [ permission ], completionHandler: {(_) in
+					self.hidePermissionsIfNeeded()
+				})
+			}
+		}, title: title.localized, subtitle: "", selected: selected, identifier: identifier))
+	}
+
 	func addPermissionEditSection(animated : Bool = false) {
 		let section = StaticTableViewSection(headerTitle: nil, footerTitle: nil, identifier: "permission-edit-section")
 		guard let share = share else { return }
 
-		section.add(row: StaticTableViewRow(toggleItemWithAction: { (row, _) in
-			if let selected = row.value as? Bool {
-				self.changePermissions(enabled: selected, permissions: [.create], completionHandler: {(_) in
-					self.hidePermissionsIfNeeded()
-				})
-			}
-		}, title: "Create".localized, subtitle: "", selected: share.canCreate, identifier: "permission-section-edit-create"))
-
-		section.add(row: StaticTableViewRow(toggleItemWithAction: { (row, _) in
-			if let selected = row.value as? Bool {
-				self.changePermissions(enabled: selected, permissions: [.update], completionHandler: {(_) in
-					self.hidePermissionsIfNeeded()
-				})
-			}
-		}, title: "Change".localized, subtitle: "", selected: share.canUpdate, identifier: "permission-section-edit-change"))
-
-		section.add(row: StaticTableViewRow(toggleItemWithAction: { (row, _) in
-			if let selected = row.value as? Bool {
-				self.changePermissions(enabled: selected, permissions: [.delete], completionHandler: { (_) in
-					self.hidePermissionsIfNeeded()
-				})
-			}
-		}, title: "Delete".localized, subtitle: "", selected: share.canDelete, identifier: "permission-section-edit-delete"))
+		self.addPermissionRow(to: section, with: "Create", permission: .create, selected: share.canCreate, identifier: "permission-section-edit-create")
+		self.addPermissionRow(to: section, with: "Change", permission: .update, selected: share.canUpdate, identifier: "permission-section-edit-change")
+		self.addPermissionRow(to: section, with: "Delete", permission: .delete, selected: share.canDelete, identifier: "permission-section-edit-delete")
 
 		let subtitles = [
 			"Allows the users you share with to create new files and add them to the share".localized,

@@ -99,8 +99,8 @@ class GroupSharingTableViewController: StaticTableViewController, UISearchResult
 
 		shareQuery = core?.sharesWithReshares(for: item, initialPopulationHandler: { (sharesWithReshares) in
 			if sharesWithReshares.count > 0 {
-				self.shares = sharesWithReshares.filter { (OCShare) -> Bool in
-					if OCShare.type != .link {
+				self.shares = sharesWithReshares.filter { (share) -> Bool in
+					if share.type != .link {
 						return true
 					}
 					return false
